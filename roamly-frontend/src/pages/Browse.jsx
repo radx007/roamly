@@ -1,29 +1,61 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { FiSearch, FiFilter, FiX, FiStar, FiGrid, FiList } from 'react-icons/fi';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import {
+  FiSearch,
+  FiFilter,
+  FiX,
+  FiStar,
+  FiGrid,
+  FiList,
+  FiLock,
+} from 'react-icons/fi';
 import { movieApi } from '../api/movieApi';
 import MovieCard from '../components/movie/MovieCard';
 import Loader from '../components/common/Loader';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
 
 const Browse = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedGenre, setSelectedGenre] = useState(searchParams.get('genre') || '');
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get('search') || ''
+  );
+  const [selectedGenre, setSelectedGenre] = useState(
+    searchParams.get('genre') || ''
+  );
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'rating');
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState(searchParams.get('featured') === 'true');
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(
+    searchParams.get('featured') === 'true'
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const genres = [
-    'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 
-    'Documentary', 'Drama', 'Family', 'Fantasy', 'History',
-    'Horror', 'Music', 'Mystery', 'Romance', 'Science Fiction',
-    'Thriller', 'War', 'Western'
+    'Action',
+    'Adventure',
+    'Animation',
+    'Comedy',
+    'Crime',
+    'Documentary',
+    'Drama',
+    'Family',
+    'Fantasy',
+    'History',
+    'Horror',
+    'Music',
+    'Mystery',
+    'Romance',
+    'Science Fiction',
+    'Thriller',
+    'War',
+    'Western',
   ];
 
   useEffect(() => {
@@ -70,6 +102,14 @@ const Browse = () => {
     }
   };
 
+  const handleMovieClick = (movieId) => {
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
+    navigate(`/movie/${movieId}`);
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(0);
@@ -112,16 +152,71 @@ const Browse = () => {
     selectedGenre && 1,
     sortBy !== 'rating' && 1,
     showFeaturedOnly && 1,
-    searchQuery && 1
+    searchQuery && 1,
   ].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-dark">
+      {/* Login Required Dialog */}
+      {showLoginDialog && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-secondary rounded-2xl max-w-md w-full p-8 shadow-2xl border border-gray-700 animate-fade-in">
+            {/* Icon */}
+            <div className="bg-gradient-to-r from-primary to-red-700 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FiLock size={40} className="text-white" />
+            </div>
+
+            {/* Content */}
+            <h2 className="text-white text-3xl font-bold text-center mb-3">
+              Login Required
+            </h2>
+            <p className="text-gray-300 text-center mb-8 text-lg">
+              Please log in to view movie details, add to watchlists, and access
+              exclusive features.
+            </p>
+
+            {/* Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full bg-gradient-to-r from-primary to-red-700 text-white py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-lg"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full bg-white text-dark py-4 rounded-xl font-bold text-lg hover:bg-gray-200 transition"
+              >
+                Create Account
+              </button>
+              <button
+                onClick={() => setShowLoginDialog(false)}
+                className="w-full bg-transparent border-2 border-gray-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-gray-700 transition"
+              >
+                Continue Browsing
+              </button>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLoginDialog(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition p-2 rounded-lg hover:bg-white/10"
+            >
+              <FiX size={24} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Header */}
       <div className="bg-gradient-to-r from-primary/20 via-secondary to-primary/20 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-white text-5xl font-bold mb-4">Discover Movies</h1>
-          <p className="text-gray-300 text-lg">Explore our collection of amazing films</p>
+          <h1 className="text-white text-5xl font-bold mb-4">
+            Discover Movies
+          </h1>
+          <p className="text-gray-300 text-lg">
+            Explore our collection of amazing films
+          </p>
         </div>
       </div>
 
@@ -129,7 +224,10 @@ const Browse = () => {
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="mb-8">
           <div className="relative">
-            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={24} />
+            <FiSearch
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={24}
+            />
             <input
               type="text"
               value={searchQuery}
@@ -152,7 +250,6 @@ const Browse = () => {
         {/* Filter Bar */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div className="flex items-center space-x-4">
-            {/* Toggle Filters Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition ${
@@ -170,7 +267,6 @@ const Browse = () => {
               )}
             </button>
 
-            {/* Featured Toggle */}
             <button
               onClick={handleFeaturedToggle}
               className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition ${
@@ -183,7 +279,6 @@ const Browse = () => {
               <span>Featured</span>
             </button>
 
-            {/* Clear Filters */}
             {activeFiltersCount > 0 && (
               <button
                 onClick={clearFilters}
@@ -195,12 +290,13 @@ const Browse = () => {
             )}
           </div>
 
-          {/* View Mode Toggle */}
           <div className="flex items-center space-x-2 bg-secondary rounded-lg p-1">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition ${
-                viewMode === 'grid' ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'
+                viewMode === 'grid'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <FiGrid size={20} />
@@ -208,7 +304,9 @@ const Browse = () => {
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition ${
-                viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-400 hover:text-white'
+                viewMode === 'list'
+                  ? 'bg-primary text-white'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <FiList size={20} />
@@ -219,7 +317,6 @@ const Browse = () => {
         {/* Expanded Filters Panel */}
         {showFilters && (
           <div className="bg-secondary p-6 rounded-xl mb-8 animate-fade-in">
-            {/* Sort By */}
             <div className="mb-6">
               <h3 className="text-white font-semibold mb-3 text-lg">Sort By</h3>
               <div className="flex flex-wrap gap-2">
@@ -227,7 +324,7 @@ const Browse = () => {
                   { value: 'rating', label: 'Highest Rated' },
                   { value: 'title', label: 'Title (A-Z)' },
                   { value: 'releaseDate', label: 'Release Date' },
-                  { value: 'voteCount', label: 'Most Popular' }
+                  { value: 'voteCount', label: 'Most Popular' },
                 ].map((option) => (
                   <button
                     key={option.value}
@@ -244,7 +341,6 @@ const Browse = () => {
               </div>
             </div>
 
-            {/* Genres */}
             <div>
               <h3 className="text-white font-semibold mb-3 text-lg">Genres</h3>
               <div className="flex flex-wrap gap-2">
@@ -300,7 +396,11 @@ const Browse = () => {
             <p className="text-gray-400">
               {movies.length > 0 ? (
                 <>
-                  Showing <span className="text-white font-semibold">{movies.length}</span> movies
+                  Showing{' '}
+                  <span className="text-white font-semibold">
+                    {movies.length}
+                  </span>{' '}
+                  movies
                   {totalPages > 1 && ` (Page ${page + 1} of ${totalPages})`}
                 </>
               ) : (
@@ -316,8 +416,12 @@ const Browse = () => {
         ) : movies.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🎬</div>
-            <h2 className="text-white text-2xl font-bold mb-2">No Movies Found</h2>
-            <p className="text-gray-400 mb-6">Try adjusting your filters or search query</p>
+            <h2 className="text-white text-2xl font-bold mb-2">
+              No Movies Found
+            </h2>
+            <p className="text-gray-400 mb-6">
+              Try adjusting your filters or search query
+            </p>
             <button
               onClick={clearFilters}
               className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-red-700 transition"
@@ -327,13 +431,20 @@ const Browse = () => {
           </div>
         ) : (
           <>
-            <div className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
-                : 'space-y-4'
-            }>
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
+                  : 'space-y-4'
+              }
+            >
               {movies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} viewMode={viewMode} />
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  viewMode={viewMode}
+                  onClick={() => handleMovieClick(movie.id)} // ← PASS HANDLER
+                />
               ))}
             </div>
 
@@ -347,8 +458,7 @@ const Browse = () => {
                 >
                   ← Previous
                 </button>
-                
-                {/* Page Numbers */}
+
                 <div className="flex space-x-2">
                   {[...Array(Math.min(5, totalPages))].map((_, idx) => {
                     const pageNum = page < 3 ? idx : page - 2 + idx;

@@ -6,11 +6,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
 import { AuthProvider } from './context/AuthProvider';
+import { useAuth } from './hooks/useAuth';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 import ChatWidget from './components/chat/ChatWidget';
+import Chatbot from './components/chatbot/Chatbot';
 
 // Public Pages
 import Home from './pages/Home';
@@ -24,7 +26,6 @@ import DiscoverWatchlists from './pages/DiscoverWatchlists';
 import Profile from './pages/Profile';
 import Watchlists from './pages/Watchlists';
 import WatchlistDetails from './components/watchlist/WatchlistDetails';
-
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -41,87 +42,97 @@ const queryClient = new QueryClient({
   },
 });
 
+// Create a wrapper component that has access to useAuth
+function AppContent() {
+  const { user } = useAuth();
+
+  return (
+    <div className="flex flex-col min-h-screen bg-dark">
+      <Navbar />
+      <main className="flex-grow">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/browse" element={<Browse />} />
+          <Route path="/movie/:id" element={<MovieDetailsPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/discover/watchlists" element={<DiscoverWatchlists />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/watchlists"
+            element={
+              <ProtectedRoute>
+                <Watchlists />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/watchlist/:id"
+            element={
+              <ProtectedRoute>
+                <WatchlistDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/movies"
+            element={
+              <AdminRoute>
+                <AdminMovies />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/import"
+            element={
+              <AdminRoute>
+                <AdminImport />
+              </AdminRoute>
+            }
+          />
+        </Routes>
+      </main>
+      <Footer />
+      {/* <ChatWidget /> */}
+      {user && <Chatbot />}  {/* ← ONLY SHOW IF LOGGED IN */}
+    </div>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <div className="flex flex-col min-h-screen bg-dark">
-            <Navbar />
-            <main className="flex-grow">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/movie/:id" element={<MovieDetailsPage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/discover/watchlists" element={<DiscoverWatchlists />} />
-
-                {/* Protected Routes */}
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/watchlists"
-                  element={
-                    <ProtectedRoute>
-                      <Watchlists />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/watchlist/:id"
-                  element={
-                    <ProtectedRoute>
-                      <WatchlistDetails />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Admin Routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <AdminRoute>
-                      <AdminDashboard />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/users"
-                  element={
-                    <AdminRoute>
-                      <AdminUsers />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/movies"
-                  element={
-                    <AdminRoute>
-                      <AdminMovies />
-                    </AdminRoute>
-                  }
-                />
-                <Route
-                  path="/admin/import"
-                  element={
-                    <AdminRoute>
-                      <AdminImport />
-                    </AdminRoute>
-                  }
-                />
-              </Routes>
-            </main>
-            <Footer />
-            <ChatWidget />
-          </div>
+          <AppContent />  {/* ← MOVED CONTENT TO SEPARATE COMPONENT */}
           <ToastContainer
             position="top-right"
             autoClose={3000}

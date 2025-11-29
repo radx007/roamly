@@ -1,70 +1,111 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaStar } from 'react-icons/fa';
+import { FiStar, FiCalendar } from 'react-icons/fi';
 
-const MovieCard = ({ movie }) => {
-  const imageBaseUrl = import.meta.env.VITE_TMDB_IMAGE_BASE || 'https://image.tmdb.org/t/p';
-  
-  // Build poster URL with proper null checks
-  const getPosterUrl = () => {
-    if (!movie.posterPath) {
-      return 'https://via.placeholder.com/500x750?text=No+Poster';
-    }
-    
-    // If posterPath is already a full URL
-    if (movie.posterPath.startsWith('http://') || movie.posterPath.startsWith('https://')) {
-      return movie.posterPath;
-    }
-    
-    // Build TMDB URL
-    return `${imageBaseUrl}/w500${movie.posterPath}`;
+const MovieCard = ({ movie, viewMode = 'grid', onClick }) => {
+  const getImageUrl = (path) => {
+    if (!path) return 'https://via.placeholder.com/500x750?text=No+Image';
+    if (path.startsWith('http')) return path;
+    return `https://image.tmdb.org/t/p/w500${path}`;
   };
 
-  const posterUrl = getPosterUrl();
+  const handleClick = (e) => {
+    e.preventDefault();  // ← PREVENT DEFAULT LINK BEHAVIOR
+    if (onClick) {
+      onClick();
+    }
+  };
 
-  return (
-    <Link to={`/movie/${movie.id}`} className="group">
-      <div className="relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 group-hover:scale-105">
+  if (viewMode === 'list') {
+    return (
+      <div
+        onClick={handleClick}
+        className="bg-secondary rounded-xl overflow-hidden flex cursor-pointer hover:scale-102 transition-transform"
+      >
         <img
-          src={posterUrl}
-          alt={movie.title || 'Movie poster'}
-          onError={(e) => {
-            e.target.onerror = null; // Prevent infinite loop
-            e.target.src = 'https://via.placeholder.com/500x750?text=No+Image';
-          }}
-          className="w-full h-[400px] object-cover"
+          src={getImageUrl(movie.posterPath)}
+          alt={movie.title}
+          className="w-32 h-48 object-cover"
         />
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="absolute bottom-0 p-4 w-full">
-            <h3 className="text-white text-lg font-bold mb-2">{movie.title}</h3>
-            <div className="flex items-center space-x-2">
-              <FaStar className="text-yellow-400" />
-              <span className="text-white">{movie.rating?.toFixed(1) || 'N/A'}</span>
-              <span className="text-gray-400">({movie.voteCount || 0})</span>
-            </div>
-            {movie.genres && movie.genres.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {movie.genres.slice(0, 3).map((genre, idx) => (
-                  <span
-                    key={idx}
-                    className="text-xs bg-primary px-2 py-1 rounded text-white"
-                  >
-                    {genre}
-                  </span>
-                ))}
+        <div className="flex-1 p-4">
+          <h3 className="text-white text-xl font-bold mb-2 hover:text-primary transition">
+            {movie.title}
+          </h3>
+          <div className="flex items-center space-x-4 text-sm text-gray-400 mb-2">
+            {movie.releaseDate && (
+              <div className="flex items-center space-x-1">
+                <FiCalendar size={14} />
+                <span>{new Date(movie.releaseDate).getFullYear()}</span>
+              </div>
+            )}
+            {movie.rating && (
+              <div className="flex items-center space-x-1">
+                <FiStar className="text-yellow-400" size={14} />
+                <span>{movie.rating.toFixed(1)}</span>
               </div>
             )}
           </div>
+          <p className="text-gray-400 text-sm line-clamp-2">
+            {movie.description || 'No description available'}
+          </p>
+          {movie.genres && movie.genres.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {movie.genres.slice(0, 3).map((genre, idx) => (
+                <span
+                  key={idx}
+                  className="bg-primary/20 text-primary px-2 py-1 rounded text-xs"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+    );
+  }
 
-        {movie.isFeatured && (
-          <div className="absolute top-2 right-2 bg-primary text-white px-2 py-1 rounded text-xs font-bold">
-            FEATURED
+  return (
+    <div
+      onClick={handleClick}
+      className="bg-secondary rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform group"
+    >
+      <div className="relative overflow-hidden">
+        <img
+          src={getImageUrl(movie.posterPath)}
+          alt={movie.title}
+          className="w-full h-96 object-cover group-hover:scale-110 transition-transform duration-300"
+        />
+        {movie.rating && (
+          <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-sm text-white px-3 py-1 rounded-full flex items-center space-x-1">
+            <FiStar className="text-yellow-400" size={14} />
+            <span className="font-bold">{movie.rating.toFixed(1)}</span>
           </div>
         )}
       </div>
-    </Link>
+      <div className="p-4">
+        <h3 className="text-white text-lg font-bold mb-2 line-clamp-2 group-hover:text-primary transition">
+          {movie.title}
+        </h3>
+        {movie.releaseDate && (
+          <div className="flex items-center space-x-1 text-gray-400 text-sm mb-2">
+            <FiCalendar size={14} />
+            <span>{new Date(movie.releaseDate).getFullYear()}</span>
+          </div>
+        )}
+        {movie.genres && movie.genres.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {movie.genres.slice(0, 2).map((genre, idx) => (
+              <span
+                key={idx}
+                className="bg-primary/20 text-primary text-xs px-2 py-1 rounded"
+              >
+                {genre}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

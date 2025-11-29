@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/movies/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search/**").permitAll()
+                        .requestMatchers("/api/chatbot/**").authenticated()
 
                         // User endpoints
                         .requestMatchers("/api/profile/**").hasAnyRole("USER", "ADMIN")

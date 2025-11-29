@@ -1,0 +1,18 @@
+package com.roamly.model.dto.chatbot;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class NestJSChatbotResponse {
+    private String answer;
+    private String conversationId;
+    private List<MovieSuggestionDTO> suggestedMovies;  // ← ADD THIS
+}
